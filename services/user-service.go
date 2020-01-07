@@ -7,7 +7,21 @@ import (
 	"github.com/dharmatin/bookstore-user-api/utils/errors"
 )
 
-func CreateUser(user users.User) (*users.User, *errors.RestError) {
+var (
+	UserService userServiceInterface = &userService{}
+)
+
+type userService struct{}
+
+type userServiceInterface interface {
+	CreateUser(users.User) (*users.User, *errors.RestError)
+	UpdateUser(bool, users.User) (*users.User, *errors.RestError)
+	DeleteUser(int64) *errors.RestError
+	GetUser(int64) (*users.User, *errors.RestError)
+	FindByStatus(string) (users.Users, *errors.RestError)
+}
+
+func (s *userService) CreateUser(user users.User) (*users.User, *errors.RestError) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
@@ -23,8 +37,8 @@ func CreateUser(user users.User) (*users.User, *errors.RestError) {
 	return &user, nil
 }
 
-func UpdateUser(isPartialUpdate bool, user users.User) (*users.User, *errors.RestError) {
-	current, getErr := GetUser(user.Id)
+func (s *userService) UpdateUser(isPartialUpdate bool, user users.User) (*users.User, *errors.RestError) {
+	current, getErr := s.GetUser(user.Id)
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
@@ -54,12 +68,12 @@ func UpdateUser(isPartialUpdate bool, user users.User) (*users.User, *errors.Res
 	return current, nil
 }
 
-func DeleteUser(userId int64) *errors.RestError {
+func (s *userService) DeleteUser(userId int64) *errors.RestError {
 	user := &users.User{Id: userId}
 	return user.Delete()
 }
 
-func GetUser(userId int64) (*users.User, *errors.RestError) {
+func (s *userService) GetUser(userId int64) (*users.User, *errors.RestError) {
 	user := &users.User{Id: userId}
 	if userId <= 0 {
 		return nil, errors.NewBadRequestError("Invalid User Id")
@@ -71,7 +85,7 @@ func GetUser(userId int64) (*users.User, *errors.RestError) {
 	return user, nil
 }
 
-func FindByStatus(status string) (users.Users, *errors.RestError) {
+func (s *userService) FindByStatus(status string) (users.Users, *errors.RestError) {
 	user := &users.User{}
 	return user.FindByStatus(status)
 }
