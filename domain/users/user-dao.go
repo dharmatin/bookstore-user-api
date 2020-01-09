@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/dharmatin/bookstore-user-api/datasources/mysql/db"
+	"github.com/dharmatin/bookstore-user-api/logger"
 	dbUtil "github.com/dharmatin/bookstore-user-api/utils/db"
 	"github.com/dharmatin/bookstore-user-api/utils/errors"
 )
@@ -23,6 +24,7 @@ var (
 func (user *User) Get() *errors.RestError {
 	stmt, err := db.Client.Prepare(queryGetUser)
 	if err != nil {
+		logger.Error("error when prepare statement", err)
 		return errors.NewInternalServerError(err.Error())
 	}
 	defer stmt.Close()
@@ -30,6 +32,7 @@ func (user *User) Get() *errors.RestError {
 	result := stmt.QueryRow(user.Id)
 
 	if err := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.CreatedDate, &user.Status, &user.Password); err != nil {
+		logger.Error("error scan struct", err)
 		return dbUtil.ParseError(err)
 	}
 
@@ -39,6 +42,7 @@ func (user *User) Get() *errors.RestError {
 func (user *User) Save() *errors.RestError {
 	stmt, err := db.Client.Prepare(queryInsert)
 	if err != nil {
+		logger.Error("error when prepare statement", err)
 		return errors.NewInternalServerError(err.Error())
 	}
 	defer stmt.Close()
