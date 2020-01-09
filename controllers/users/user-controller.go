@@ -88,6 +88,22 @@ func SearchUser(c *gin.Context) {
 	c.JSON(http.StatusOK, users.Marshal(getXPublic(c)))
 }
 
+func Login(c *gin.Context) {
+	var request users.LoginRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		restErr := errors.NewBadRequestError("invalid request")
+		c.JSON(restErr.Status, restErr)
+		return
+	}
+	user, err := services.UserService.LoginUser(request)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, user.Marshall(getXPublic(c)))
+}
+
 func getUserId(urlParam string) (int64, *errors.RestError) {
 	userId, err := strconv.ParseInt(urlParam, 10, 64)
 	if err != nil {

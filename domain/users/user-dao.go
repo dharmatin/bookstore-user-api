@@ -10,11 +10,12 @@ import (
 )
 
 const (
-	queryInsert     = "INSERT INTO users (first_name, last_name, email, created_date, status, password) VALUES (?, ?, ?, ?, ?, ?)"
-	queryGetUser    = "SELECT id, first_name, last_name, email, created_date, status, password FROM users WHERE id=?"
-	queryUpdate     = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id=?"
-	queryDelete     = "DELETE FROM users WHERE id=?"
-	queryFindStatus = "SELECT id, first_name, last_name, email, created_date, status FROM users WHERE status=?"
+	queryInsert                 = "INSERT INTO users (first_name, last_name, email, created_date, status, password) VALUES (?, ?, ?, ?, ?, ?)"
+	queryGetUser                = "SELECT id, first_name, last_name, email, created_date, status, password FROM users WHERE id=?"
+	queryUpdate                 = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id=?"
+	queryDelete                 = "DELETE FROM users WHERE id=?"
+	queryFindStatus             = "SELECT id, first_name, last_name, email, created_date, status FROM users WHERE status=?"
+	queryFindByEmailAndPassword = "SELECT id, first_name, last_name, email, created_date, status FROM users WHERE email=? and password=?"
 )
 
 var (
@@ -113,4 +114,18 @@ func (user *User) FindByStatus(status string) (Users, *errors.RestError) {
 	}
 
 	return results, nil
+}
+
+func (user *User) FindByEmailAndPassword() *errors.RestError {
+	stmt, err := db.Client.Prepare(queryFindByEmailAndPassword)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+	row := stmt.QueryRow(user.Email, user.Password)
+	if err := row.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.CreatedDate, &user.Status); err != nil {
+		logger.Error("error scan struct", err)
+		return dbUtil.ParseError(err)
+	}
+	return nil
 }
