@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/dharmatin/bookstore-oauth-go/oauth"
 	"github.com/dharmatin/bookstore-user-api/domain/users"
 	"github.com/dharmatin/bookstore-user-api/services"
 	"github.com/dharmatin/bookstore-user-api/utils/errors"
@@ -11,6 +12,12 @@ import (
 )
 
 func GetUser(c *gin.Context) {
+
+	if err := oauth.Auth(c.Request); err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+
 	userId, err := getUserId(c.Param("user_id"))
 
 	if err != nil {
